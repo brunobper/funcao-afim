@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Função Afim — Aula Interativa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f3ff; color: #1a1a2e; min-height: 100vh; }
+
+  header { background: linear-gradient(135deg, #534AB7, #7F77DD); color: white; padding: 32px 24px 24px; text-align: center; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  header p { font-size: 15px; opacity: 0.85; }
+  header .badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; font-size: 13px; margin-top: 10px; }
+
+  .container { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  .tab-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; background: white; padding: 10px; border-radius: 14px; box-shadow: 0 2px 12px rgba(83,74,183,0.10); }
+  .tab { padding: 9px 18px; border-radius: 10px; border: none; background: transparent; color: #666; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .18s; }
+  .tab:hover { background: #f0effe; color: #534AB7; }
+  .tab.active { background: #534AB7; color: #fff; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: white; border-radius: 14px; padding: 24px; margin-bottom: 18px; box-shadow: 0 2px 12px rgba(83,74,183,0.07); }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 14px; color: #1a1a2e; }
+  .card h3 { font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #1a1a2e; }
+  .card p { font-size: 14px; line-height: 1.75; color: #555; margin-bottom: 10px; }
+
+  .formula-box { background: #EEEDFE; border: 1.5px solid #AFA9EC; border-radius: 12px; padding: 20px; margin: 16px 0; text-align: center; }
+  .formula-big { font-size: 26px; font-weight: 700; color: #3C3489; letter-spacing: 1px; }
+  .formula-sub { font-size: 13px; color: #534AB7; margin-top: 8px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  @media(max-width:520px){ .grid2 { grid-template-columns: 1fr; } }
+
+  .metric { background: #f8f7ff; border-radius: 10px; padding: 14px 18px; }
+  .metric .val { font-size: 22px; font-weight: 700; }
+  .metric .desc { font-size: 13px; color: #777; margin-top: 4px; line-height: 1.5; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: #f8f7ff; font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 1.5px solid #e8e6ff; color: #534AB7; }
+  td { padding: 9px 14px; border-bottom: 1px solid #f0effe; color: #555; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 600; color: #1a1a2e; }
+
+  .slider-row { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+  .slider-row label { font-size: 14px; font-weight: 600; min-width: 55px; color: #534AB7; }
+  .slider-row input[type=range] { flex: 1; accent-color: #534AB7; }
+  .slider-row .val { font-size: 15px; font-weight: 700; min-width: 38px; text-align: right; }
+
+  .tag { display: inline-block; padding: 5px 13px; border-radius: 20px; font-size: 13px; font-weight: 600; margin: 4px 4px 4px 0; }
+  .tag-purple { background: #EEEDFE; color: #3C3489; }
+  .tag-teal { background: #E1F5EE; color: #0F6E56; }
+  .tag-amber { background: #FAEEDA; color: #633806; }
+
+  .badge-row { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .badge-item { display: flex; align-items: center; gap: 12px; }
+  .badge { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .badge-up { background: #E1F5EE; color: #0F6E56; }
+  .badge-down { background: #FAECE7; color: #712B13; }
+  .badge-const { background: #FAEEDA; color: #633806; }
+  .badge-text { font-size: 13px; color: #555; }
+
+  .example-step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+  .step-num { min-width: 30px; height: 30px; border-radius: 50%; background: #534AB7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .step-body { font-size: 14px; color: #444; line-height: 1.65; padding-top: 5px; }
+  .step-body strong { color: #1a1a2e; }
+
+  .quiz-opt { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1.5px solid #e8e6ff; border-radius: 10px; margin: 10px 0; cursor: pointer; font-size: 14px; color: #333; transition: all .15s; user-select: none; }
+  .quiz-opt:hover { background: #f8f7ff; border-color: #AFA9EC; }
+  .quiz-opt.correct { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; font-weight: 600; }
+  .quiz-opt.wrong { border-color: #D85A30; background: #FAECE7; color: #712B13; }
+  .opt-letter { min-width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .feedback { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-top: 10px; display: none; line-height: 1.6; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #E1F5EE; color: #0F6E56; border: 1px solid #9FE1CB; }
+  .feedback.err { background: #FAECE7; color: #712B13; border: 1px solid #F5C4B3; }
+  .next-btn { margin-top: 14px; padding: 10px 24px; border-radius: 10px; border: none; background: #534AB7; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; display: none; transition: background .15s; }
+  .next-btn:hover { background: #3C3489; }
+  .next-btn.show { display: inline-block; }
+  .progress-bar { height: 6px; background: #f0effe; border-radius: 3px; margin-bottom: 18px; }
+  .progress-fill { height: 6px; background: linear-gradient(90deg, #534AB7, #7F77DD); border-radius: 3px; transition: width .3s; }
+  .quiz-num { font-size: 13px; color: #888; margin-bottom: 8px; }
+
+  #quiz-resultado { text-align: center; padding: 32px 24px; }
+  #quiz-resultado h2 { font-size: 24px; margin-bottom: 12px; }
+  #quiz-resultado p { font-size: 16px; color: #555; line-height: 1.7; }
+  .restart-btn { margin-top: 20px; padding: 12px 28px; border-radius: 10px; border: none; background: #534AB7; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .restart-btn:hover { background: #3C3489; }
+
+  canvas { border-radius: 10px; }
+  .canvas-wrap { background: #f8f7ff; border-radius: 10px; padding: 8px; }
+
+  /* Casos especiais */
+  .caso-card { border: 1.5px solid #e8e6ff; border-radius: 12px; padding: 16px 20px; margin-bottom: 14px; }
+  .caso-card.teal { border-color: #9FE1CB; background: #f0fff9; }
+  .caso-card.amber { border-color: #FAC775; background: #fffbf0; }
+  .caso-card.purple { border-color: #AFA9EC; background: #f8f7ff; }
+
+  footer { text-align: center; padding: 18px; font-size: 12px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 Função Afim</h1>
+  <p>Aula interativa — Ensino Médio</p>
+  <div class="badge">f(x) = ax + b</div>
+</header>
+
+<div class="container">
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('conceito', this)">📖 Conceito</button>
+    <button class="tab" onclick="showTab('grafico', this)">📈 Gráfico</button>
+    <button class="tab" onclick="showTab('casos', this)">🔍 Casos Especiais</button>
+    <button class="tab" onclick="showTab('exemplos', this)">📝 Exemplos</button>
+    <button class="tab" onclick="showTab('quiz', this)">🧠 Quiz</button>
+  </div>
+
+  <!-- CONCEITO -->
+  <div id="tab-conceito" class="section active">
+    <div class="card">
+      <h2>O que é uma Função Afim?</h2>
+      <p>Uma <strong>função afim</strong> (também chamada de <strong>função de 1º grau</strong>) é qualquer função que pode ser escrita na forma:</p>
+      <div class="formula-box">
+        <div class="formula-big">f(x) = ax + b</div>
+        <div class="formula-sub">onde <strong>a ≠ 0</strong> e a, b são números reais</div>
+      </div>
+      <div class="grid2">
+        <div class="metric">
+          <div class="val" style="color:#534AB7;">a</div>
+          <div class="desc"><strong>Coeficiente angular</strong><br>Indica a inclinação da reta. É a taxa de variação da função — quanto f(x) varia quando x aumenta 1 unidade.</div>
+        </div>
+        <div class="metric">
+          <div class="val" style="color:#1D9E75;">b</div>
+          <div class="desc"><strong>Coeficiente linear</strong><br>É o valor de f(0). Indica o ponto onde a reta cruza o eixo y (eixo das ordenadas).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Propriedades importantes</h2>
+      <table>
+        <tr><th>Propriedade</th><th>Valor / Explicação</th></tr>
+        <tr><td>Domínio</td><td>Todos os reais: D = ℝ</td></tr>
+        <tr><td>Imagem</td><td>Todos os reais: Im = ℝ</td></tr>
+        <tr><td>Gráfico</td><td>Uma reta — nunca curva, nunca vertical</td></tr>
+        <tr><td>Zero da função</td><td>Valor de x tal que f(x) = 0, ou seja: <strong>x = –b/a</strong></td></tr>
+        <tr><td>Taxa de variação</td><td>Δy/Δx = a (sempre constante)</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>O que o coeficiente angular <em>a</em> nos diz?</h2>
+      <div class="badge-row">
+        <div class="badge-item">
+          <span class="badge badge-up">a &gt; 0</span>
+          <span class="badge-text">Função <strong>crescente</strong> — quanto maior x, maior f(x). A reta sobe da esquerda para a direita.</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge badge-down">a &lt; 0</span>
+          <span class="badge-text">Função <strong>decrescente</strong> — quanto maior x, menor f(x). A reta desce da esquerda para a direita.</span>
+        </div>
+        <div class="badge-item">
+          <span class="badge badge-const">|a| maior</span>
+          <span class="badge-text">Reta mais <strong>inclinada</strong> (mais "íngreme").</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div id="tab-grafico" class="section">
+    <div class="card">
+      <h2>Explore a função f(x) = ax + b</h2>
+      <p>Arraste os controles abaixo e veja o gráfico mudar em tempo real!</p>
+      <div class="slider-row" style="margin-top:18px;">
+        <label>a =</label>
+        <input type="range" id="sl-a" min="-5" max="5" step="0.5" value="1">
+        <span class="val" id="val-a" style="color:#534AB7;">1</span>
+      </div>
+      <div class="slider-row">
+        <label>b =</label>
+        <input type="range" id="sl-b" min="-8" max="8" step="0.5" value="0">
+        <span class="val" id="val-b" style="color:#1D9E75;">0</span>
+      </div>
+      <div style="margin: 14px 0; display:flex; flex-wrap:wrap; gap:8px;">
+        <span class="tag tag-purple" id="info-eq">f(x) = 1x + 0</span>
+        <span class="tag tag-teal" id="info-zero">Zero: x = 0</span>
+        <span class="tag tag-amber" id="info-comp">Crescente ↑</span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvas-grafico" height="340"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tabela de valores</h3>
+      <div id="tabela-valores" style="overflow-x:auto; margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- CASOS ESPECIAIS -->
+  <div id="tab-casos" class="section">
+    <div class="card">
+      <h2>Casos especiais da função afim</h2>
+
+      <div class="caso-card purple">
+        <h3>1. Função Linear (b = 0)</h3>
+        <div class="formula-box" style="margin:10px 0;">
+          <div class="formula-big" style="font-size:22px;">f(x) = ax</div>
+        </div>
+        <p>Passa obrigatoriamente pela <strong>origem (0, 0)</strong>. O coeficiente linear é zero, por isso a reta sempre começa no centro do plano cartesiano.</p>
+        <p>Exemplo: f(x) = 3x → f(0) = 0, f(1) = 3, f(2) = 6</p>
+      </div>
+
+      <div class="caso-card teal">
+        <h3>2. Função Identidade (a = 1, b = 0)</h3>
+        <div class="formula-box" style="margin:10px 0; background:#E1F5EE; border-color:#9FE1CB;">
+          <div class="formula-big" style="font-size:22px; color:#0F6E56;">f(x) = x</div>
+        </div>
+        <p>A imagem sempre é igual ao domínio: f(1) = 1, f(2) = 2, f(–3) = –3. Forma a bissetriz do 1º e 3º quadrantes (ângulo de 45°).</p>
+      </div>
+
+      <div class="caso-card amber">
+        <h3>3. Função Constante (a = 0) — caso limite</h3>
+        <div class="formula-box" style="margin:10px 0; background:#FAEEDA; border-color:#FAC775;">
+          <div class="formula-big" style="font-size:22px; color:#633806;">f(x) = b</div>
+        </div>
+        <p><strong>Atenção:</strong> tecnicamente, quando a = 0 a função <em>não</em> é afim (pois exigimos a ≠ 0), mas é um caso limite importante. O gráfico é uma reta horizontal.</p>
+        <p>Exemplo: f(x) = 4 → sempre vale 4, independente de x.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Comparando as retas no mesmo gráfico</h3>
+      <div class="canvas-wrap" style="margin-top:12px;">
+        <canvas id="canvas-casos" height="300"></canvas>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:13px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:4px;background:#534AB7;border-radius:2px;display:inline-block;"></span>f(x) = 2x + 3</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:4px;background:#1D9E75;border-radius:2px;display:inline-block;"></span>f(x) = x (identidade)</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:4px;background:#D85A30;border-radius:2px;display:inline-block;"></span>f(x) = –x + 2</span>
+        <span style="display:flex;align-items:center;gap:6px;"><span style="width:14px;height:4px;background:#BA7517;border-radius:2px;display:inline-block;border-top:2px dashed #BA7517;"></span>f(x) = 4 (constante)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXEMPLOS -->
+  <div id="tab-exemplos" class="section">
+    <div class="card">
+      <h2>Exemplo 1 — Problema do táxi 🚕</h2>
+      <p>Um táxi cobra <strong>R$ 5,00 de bandeirada</strong> mais <strong>R$ 2,50 por km rodado</strong>. Qual é a função que representa o preço da corrida?</p>
+      <div class="formula-box">
+        <div class="formula-big">f(x) = 2,5x + 5</div>
+        <div class="formula-sub">x = quilômetros rodados | f(x) = preço em reais</div>
+      </div>
+      <div class="example-step"><div class="step-num">1</div><div class="step-body"><strong>a = 2,5</strong> → a cada km percorrido, o preço sobe R$ 2,50</div></div>
+      <div class="example-step"><div class="step-num">2</div><div class="step-body"><strong>b = 5</strong> → mesmo sem sair do lugar, já paga R$ 5,00 (bandeirada)</div></div>
+      <div class="example-step"><div class="step-num">3</div><div class="step-body"><strong>Quanto custa 10 km?</strong> f(10) = 2,5 × 10 + 5 = 25 + 5 = <strong>R$ 30,00</strong></div></div>
+      <div class="example-step"><div class="step-num">4</div><div class="step-body"><strong>Zero da função:</strong> 2,5x + 5 = 0 → x = –2. Sem sentido prático aqui (km não pode ser negativo).</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Exemplo 2 — Encontrar a lei pelos pontos 📍</h2>
+      <p>Uma função afim passa pelos pontos <strong>(2, 7)</strong> e <strong>(4, 11)</strong>. Qual é a lei?</p>
+      <div class="example-step"><div class="step-num">1</div><div class="step-body"><strong>Calcule o coeficiente angular:</strong><br>a = (y₂ – y₁) / (x₂ – x₁) = (11 – 7) / (4 – 2) = 4 / 2 = <strong>2</strong></div></div>
+      <div class="example-step"><div class="step-num">2</div><div class="step-body"><strong>Calcule o coeficiente linear:</strong><br>Use o ponto (2, 7): 7 = 2 × 2 + b → 7 = 4 + b → b = <strong>3</strong></div></div>
+      <div class="example-step"><div class="step-num">3</div><div class="step-body"><strong>Verifique com o outro ponto:</strong><br>f(4) = 2 × 4 + 3 = 11 ✓</div></div>
+      <div class="formula-box">
+        <div class="formula-big">f(x) = 2x + 3</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Exemplo 3 — Encontrar o zero da função 🎯</h2>
+      <p>Para f(x) = –3x + 9, encontre o zero da função e interprete graficamente.</p>
+      <div class="example-step"><div class="step-num">1</div><div class="step-body"><strong>Zero significa f(x) = 0:</strong><br>–3x + 9 = 0</div></div>
+      <div class="example-step"><div class="step-num">2</div><div class="step-body"><strong>Isole o x:</strong><br>–3x = –9 → x = –9/(–3) → <strong>x = 3</strong></div></div>
+      <div class="example-step"><div class="step-num">3</div><div class="step-body"><strong>Interpretação gráfica:</strong> O gráfico corta o eixo x exatamente em x = 3. Para x &lt; 3, f(x) &gt; 0; para x &gt; 3, f(x) &lt; 0.</div></div>
+      <div class="example-step"><div class="step-num">4</div><div class="step-body"><strong>Verifique:</strong> f(3) = –3 × 3 + 9 = –9 + 9 = 0 ✓</div></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="tab-quiz" class="section">
+    <div class="card" id="quiz-card">
+      <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+      <p class="quiz-num" id="quiz-num">Questão 1 de 5</p>
+      <h2 id="quiz-pergunta"></h2>
+      <div id="quiz-opcoes" style="margin-top:16px;"></div>
+      <div class="feedback" id="quiz-feedback"></div>
+      <button class="next-btn" id="quiz-next" onclick="nextQuestion()">Próxima questão →</button>
+    </div>
+    <div id="quiz-resultado" style="display:none;" class="card">
+      <h2>Resultado 🎉</h2>
+      <p id="resultado-texto" style="margin-top:10px;"></p>
+      <button class="restart-btn" onclick="resetQuiz()">Tentar novamente</button>
+    </div>
+  </div>
+</div>
+
+<footer>Material de estudo — Função Afim · Ensino Médio</footer>
+
+<script>
+// === TABS ===
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'grafico') setTimeout(initGrafico, 60);
+  if (id === 'casos') setTimeout(drawCasos, 60);
+}
+
+// === GRÁFICO INTERATIVO ===
+let chartG = null;
+let grafInitialized = false;
+
+function initGrafico() {
+  if (!grafInitialized) {
+    document.getElementById('sl-a').oninput = function() {
+      document.getElementById('val-a').textContent = this.value;
+      updateGrafico();
+    };
+    document.getElementById('sl-b').oninput = function() {
+      document.getElementById('val-b').textContent = this.value;
+      updateGrafico();
+    };
+    grafInitialized = true;
+  }
+  updateGrafico();
+}
+
+function updateGrafico() {
+  const a = parseFloat(document.getElementById('sl-a').value);
+  const b = parseFloat(document.getElementById('sl-b').value);
+  const xs = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  const ys = xs.map(x => a*x + b);
+
+  const zero = a !== 0 ? (-b/a).toFixed(2) : '—';
+  const bStr = b >= 0 ? '+ ' + b : '– ' + Math.abs(b);
+  document.getElementById('info-eq').textContent = 'f(x) = ' + a + 'x ' + bStr;
+  document.getElementById('info-zero').textContent = 'Zero: x = ' + zero;
+  document.getElementById('info-comp').textContent = a > 0 ? 'Crescente ↑' : a < 0 ? 'Decrescente ↓' : 'Constante →';
+
+  // Tabela
+  const sub = [-3,-2,-1,0,1,2,3];
+  let html = '<table><tr><th>x</th>';
+  sub.forEach(x => html += '<th>' + x + '</th>');
+  html += '</tr><tr><td>f(x)</td>';
+  sub.forEach(x => html += '<td>' + (a*x+b) + '</td>');
+  html += '</tr></table>';
+  document.getElementById('tabela-valores').innerHTML = html;
+
+  // Gráfico
+  const ctx = document.getElementById('canvas-grafico').getContext('2d');
+  if (chartG) chartG.destroy();
+  chartG = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [{
+        data: ys,
+        borderColor: '#534AB7',
+        backgroundColor: 'rgba(83,74,183,0.07)',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointBackgroundColor: '#534AB7',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        fill: false,
+        tension: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: 'rgba(83,74,183,0.08)' },
+          ticks: { color: '#888' },
+          title: { display: true, text: 'x', color: '#534AB7', font: { weight: 'bold' } }
+        },
+        y: {
+          grid: { color: 'rgba(83,74,183,0.08)' },
+          ticks: { color: '#888' },
+          title: { display: true, text: 'f(x)', color: '#534AB7', font: { weight: 'bold' } }
+        }
+      }
+    }
+  });
+}
+
+// === CASOS ESPECIAIS ===
+let chartC = null;
+function drawCasos() {
+  const xs = [-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  const ctx = document.getElementById('canvas-casos').getContext('2d');
+  if (chartC) chartC.destroy();
+  chartC = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: xs,
+      datasets: [
+        { label: 'f(x)=2x+3', data: xs.map(x=>2*x+3), borderColor:'#534AB7', borderWidth:2.5, pointRadius:0, fill:false, tension:0 },
+        { label: 'f(x)=x', data: xs.map(x=>x), borderColor:'#1D9E75', borderWidth:2.5, pointRadius:0, fill:false, tension:0 },
+        { label: 'f(x)=–x+2', data: xs.map(x=>-x+2), borderColor:'#D85A30', borderWidth:2.5, pointRadius:0, fill:false, tension:0 },
+        { label: 'f(x)=4', data: xs.map(()=>4), borderColor:'#BA7517', borderWidth:2.5, pointRadius:0, fill:false, tension:0, borderDash:[8,5] }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(83,74,183,0.08)' }, ticks: { color: '#888' } },
+        y: { grid: { color: 'rgba(83,74,183,0.08)' }, ticks: { color: '#888' }, min: -8, max: 14 }
+      }
+    }
+  });
+}
+
+// === QUIZ ===
+const questions = [
+  {
+    q: "Qual é o zero da função f(x) = 2x – 6?",
+    opts: ["x = 2", "x = 3", "x = 6", "x = –3"],
+    correct: 1,
+    explain: "Fazendo f(x) = 0: 2x – 6 = 0 → 2x = 6 → x = 3 ✓"
+  },
+  {
+    q: "A função f(x) = –4x + 8 é:",
+    opts: ["Crescente", "Decrescente", "Constante", "Nenhuma das anteriores"],
+    correct: 1,
+    explain: "Como a = –4 e a < 0, a função é decrescente. ✓"
+  },
+  {
+    q: "Uma função afim tem f(0) = 5 e f(2) = 11. Qual é a lei?",
+    opts: ["f(x) = 3x + 5", "f(x) = 2x + 5", "f(x) = 5x + 3", "f(x) = 6x + 5"],
+    correct: 0,
+    explain: "b = f(0) = 5. Coeficiente angular: a = (11–5)/(2–0) = 3. Logo f(x) = 3x + 5 ✓"
+  },
+  {
+    q: "O coeficiente linear b da função f(x) = 7x – 4 indica:",
+    opts: ["A inclinação da reta", "Onde a reta corta o eixo y, no ponto (0, –4)", "O zero da função", "A taxa de variação"],
+    correct: 1,
+    explain: "b = –4 é o valor de f(0), ou seja, onde a reta cruza o eixo y. ✓"
+  },
+  {
+    q: "Para f(x) = 5x + 10, qual o valor de f(–2)?",
+    opts: ["0", "20", "–10", "5"],
+    correct: 0,
+    explain: "f(–2) = 5 × (–2) + 10 = –10 + 10 = 0 ✓"
+  }
+];
+
+let qIdx = 0, score = 0, answered = false;
+
+function renderQuestion() {
+  const q = questions[qIdx];
+  document.getElementById('quiz-num').textContent = 'Questão ' + (qIdx+1) + ' de ' + questions.length;
+  document.getElementById('quiz-progress').style.width = ((qIdx / questions.length) * 100) + '%';
+  document.getElementById('quiz-pergunta').textContent = q.q;
+  const opts = document.getElementById('quiz-opcoes');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-opt';
+    div.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65+i) + '</span>' + opt;
+    div.onclick = () => { if (!answered) answer(i, div); };
+    opts.appendChild(div);
+  });
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-next').className = 'next-btn';
+  answered = false;
+}
+
+function answer(i, el) {
+  answered = true;
+  const q = questions[qIdx];
+  document.querySelectorAll('.quiz-opt').forEach(o => o.onclick = null);
+  const fb = document.getElementById('quiz-feedback');
+  if (i === q.correct) {
+    el.classList.add('correct');
+    score++;
+    fb.textContent = '✓ Correto! ' + q.explain;
+    fb.className = 'feedback show ok';
+  } else {
+    el.classList.add('wrong');
+    document.querySelectorAll('.quiz-opt')[q.correct].classList.add('correct');
+    fb.textContent = '✗ Incorreto. ' + q.explain;
+    fb.className = 'feedback show err';
+  }
+  document.getElementById('quiz-next').className = 'next-btn show';
+}
+
+function nextQuestion() {
+  qIdx++;
+  if (qIdx >= questions.length) {
+    document.getElementById('quiz-progress').style.width = '100%';
+    document.getElementById('quiz-card').style.display = 'none';
+    document.getElementById('quiz-resultado').style.display = 'block';
+    const pct = Math.round(score / questions.length * 100);
+    let emoji = pct >= 80 ? '🏆 Excelente! Você dominou a função afim!' : pct >= 60 ? '📚 Bom trabalho! Revise os pontos errados.' : '💪 Continue estudando! Você consegue!';
+    document.getElementById('resultado-texto').innerHTML =
+      'Você acertou <strong>' + score + ' de ' + questions.length + '</strong> questões (' + pct + '%).<br><br>' + emoji;
+  } else {
+    renderQuestion();
+  }
+}
+
+function resetQuiz() {
+  qIdx = 0; score = 0; answered = false;
+  document.getElementById('quiz-card').style.display = 'block';
+  document.getElementById('quiz-resultado').style.display = 'none';
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
